@@ -2,7 +2,7 @@
 
 An end-to-end machine learning pipeline and REST API that predicts residential property prices in Washington, D.C. using historical assessment data from the city's CAMA database.
 
-This project demonstrates a production-grade decoupled architecture: raw property data is ingested into a PostgreSQL database, processed and trained via a scikit-learn pipeline, served through a Flask web application, tracked using request logging for model monitoring, and fully containerized for one-command deployment.
+This project demonstrates a production-style decoupled architecture: raw property data is ingested into a PostgreSQL database, processed and trained via a scikit-learn pipeline, served through a Flask web application, tracked using request logging for model monitoring, and fully containerized for one-command deployment.
 
 ## Architecture & Tech Stack
 Machine Learning: scikit-learn (Random Forest Regressor, Pipelines, ColumnTransformers, OneHotEncoder, StandardScaler)
