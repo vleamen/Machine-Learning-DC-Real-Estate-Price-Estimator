@@ -2,52 +2,48 @@
 
 An end-to-end machine learning pipeline and REST API that predicts residential property prices in Washington, D.C. using historical assessment data from the city's CAMA database. 
 
-The project demonstrates a decoupled architecture: raw data is ingested into a PostgreSQL database, processed and trained via a scikit-learn pipeline, served through a Flask web application, and tracked using request logging for model monitoring.
+This project demonstrates a production-grade decoupled architecture: raw property data is ingested into a PostgreSQL database, processed and trained via a scikit-learn pipeline, served through a Flask web application, tracked using request logging for model monitoring, and fully containerized for one-command deployment.
 
 ## Architecture & Tech Stack
 
 - **Machine Learning:** `scikit-learn` (Random Forest Regressor, Pipelines, ColumnTransformers, OneHotEncoder, StandardScaler)
 - **Backend / API:** `Flask`, `SQLAlchemy`, `psycopg2`
 - **Database:** `PostgreSQL`
-- **Serialization:** `joblib`
+- **Containerization:** `Docker`, `Docker Compose`, `Bash`
 
 ## Pipeline Overview
 
-1. **Infiltration & Ingestion (`ingest_data.py`):** Pulls raw property assessment records from a CSV, filters relevant features, and bulk-inserts them into PostgreSQL.
-2. **Feature Engineering & Training (`train.py`):** Queries the database in chunks, standardizes numerical features (`bathrm`, `rooms`, `bedrm`, `ayb`), one-hot encodes high-impact categorical features (`grade`, `style`, `cndtn`), and trains a multi-core optimized Random Forest model bundled inside a scikit-learn `Pipeline`.
-3. **Serving & Logging (`app.py`):** Loads the serialized `.pkl` artifact into memory on startup, accepts property JSON payloads, generates real-time predictions, and logs every transaction to a Postgres audit table.
+1. **Ingestion (`ingest_data.py`):** Parses raw property assessment records from the D.C. CSV dataset, extracts key valuation features, and bulk-inserts them into PostgreSQL.
+2. **Feature Engineering & Training (`train.py`):** Streams data out of Postgres in chunks, standardizes numerical features (`bathrm`, `rooms`, `bedrm`, `ayb`), one-hot encodes high-impact categorical features (`grade`, `style`, `cndtn`), and trains a multi-core optimized Random Forest model bundled inside a scikit-learn `Pipeline`.
+3. **Serving & Auditing (`app.py`):** Loads the serialized `.pkl` artifact into memory on startup, accepts property JSON payloads, generates real-time predictions, and logs every incoming request and estimated price to a Postgres audit table.
 
 ## Project Structure
 
 ├── app.py              # Flask REST API server and database logger
 ├── ingest_data.py      # ETL script to parse CSV and load into PostgreSQL
 ├── train.py            # Feature engineering and model training script
-├── requirements.txt    # Project dependencies
-└── dc_model.pkl        # Serialized scikit-learn pipeline artifact (git-ignored or included)
+├── entrypoint.sh       # Container orchestration script (waits for DB, runs ETL & training)
+├── start.sh            # Master developer startup script
+├── Dockerfile          # Multi-stage image build configuration
+├── docker-compose.yml  # Local multi-container orchestration
+├── requirements.txt    # Pinned Python dependencies
+└── README.md           # Project documentation
 
 
-## Getting Started
+## Quick Start
 
-1. Prerequisites
-    Ensure you have Python 3.9+, PostgreSQL installed locally, and your raw DC_Properties.csv file placed in the project directory.
+To run the entire ecosystem (PostgreSQL database, automated data ingestion, model training, and the Flask API) inside isolated containers, ensure you have Docker Desktop installed and running, then execute:
 
-2. Open your terminal and create the local PostgreSQL database:
-    createdb dc_housing_db
-    
-3. Install Dependencies
-    pip install -r requirements.txt
+./start.sh
 
-4. Execute the ETL script to populate your database:
-    python3 ingest_data.py
-
-5. Run the training script to generate the model artifact:
-    python3 train.py
-
-6. Start the API Server
-    python3 app.py
+The script will automatically build the containers, ingest the dataset, train the model, and spin up the API server.
+(Note: The first execution may take a moment while the Random Forest processes the training dataset).
 
 ## API Usage
-Send a POST request to the prediction endpoint with property specifications:
+
+Once the container is running, send a POST request to the prediction endpoint with property specifications:
+
+Example Request:
 
 curl -X POST [http://127.0.0.1:5000/predict](http://127.0.0.1:5000/predict) \
      -H "Content-Type: application/json" \
@@ -63,7 +59,6 @@ curl -X POST [http://127.0.0.1:5000/predict](http://127.0.0.1:5000/predict) \
 
 Example Response:
 
-JSON
 {
   "estimated_price": 296838.88,
   "features_used": {
@@ -77,3 +72,11 @@ JSON
   },
   "status": "success"
 }
+
+## Manual Management Commands
+
+View Live Logs:
+docker-compose logs -f
+
+Stop the Application:
+docker-compose down
