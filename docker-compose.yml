@@ -15,7 +15,7 @@ services:
   api:
     build: .
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://vincentnguyen:password@db:5432/dc_housing_db
     depends_on:

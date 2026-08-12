@@ -26,9 +26,9 @@ echo ""
 echo "To view live logs, run: docker-compose logs -f"
 echo "To stop the app, run:   docker-compose down"
 echo ""
-echo "Once the logs show 'Running on http://127.0.0.1:5000', test it with:"
+echo "Once the logs show 'Running on http://0.0.0.0:5000', test it with:"
 echo ""
-echo 'curl -X POST http://127.0.0.1:5000/predict \'
+echo 'curl -X POST http://127.0.0.1:5001/predict \'
 echo '     -H "Content-Type: application/json" \'
 echo "     -d '{"
 echo '           "bathrm": 2,'

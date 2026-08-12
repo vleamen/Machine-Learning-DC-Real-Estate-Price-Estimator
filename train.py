@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from sqlalchemy import create_engine
 from sklearn.ensemble import RandomForestRegressor
@@ -6,10 +7,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import joblib
 
-engine = create_engine("postgresql://vincentnguyen@localhost:5432/dc_housing_db")
+db_uri = os.environ.get('DATABASE_URL', "postgresql://vincentnguyen:password@db:5432/dc_housing_db")
+engine = create_engine(db_uri)
 
 print("1. Querying data from PostgreSQL (this may take a few seconds)...")
-query = "SELECT bathrm, rooms, bedrm, ayb, grade, style, cndtn, price FROM historical_homes"
+# Updated query: lowercase gba, no zipcode
+query = "SELECT bathrm, rooms, bedrm, ayb, grade, style, cndtn, gba, price FROM historical_homes"
 
 # Read the database in chunks to prevent memory spikes
 chunks = []
@@ -24,13 +27,16 @@ print(f"Total dataset size: {len(df):,} rows.")
 # Drop nulls
 df = df.dropna()
 
-X = df[['bathrm', 'rooms', 'bedrm', 'ayb', 'grade', 'style', 'cndtn']]
+# Updated X: lowercase gba, no zipcode
+X = df[['bathrm', 'rooms', 'bedrm', 'ayb', 'grade', 'style', 'cndtn', 'gba']]
 y = df['price']
 
 # 2. Define the Preprocessing Steps
-numeric_features = ['bathrm', 'rooms', 'bedrm', 'ayb']
+# Numeric features includes gba
+numeric_features = ['bathrm', 'rooms', 'bedrm', 'ayb', 'gba']
 numeric_transformer = StandardScaler()
 
+# Categorical features is just the core three
 categorical_features = ['grade', 'style', 'cndtn']
 categorical_transformer = OneHotEncoder(handle_unknown='ignore')
 
@@ -44,7 +50,6 @@ preprocessor = ColumnTransformer(
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('regressor', RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)) 
-    # Note: n_jobs=-1 tells Random Forest to use ALL your Mac's CPU cores to train faster!
 ])
 
 print("3. Training the Random Forest model across all CPU cores...")
