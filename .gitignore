@@ -1,0 +1,19 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Large datasets and CSVs
+*.csv
+*.zip
+
+# Serialized model artifacts (optional: remove this line if you want to commit your .pkl file)
+*.pkl
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+.DS_Store
